@@ -1,1 +1,6 @@
-# Smart-Archive-Agent
+#  TEAM 12- Smart Archive Agent
+
+MEMBERS : 
+KUSH AGHERA 24BCE0149
+SANDEEP MORE 24BCE2883
+
