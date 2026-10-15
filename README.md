@@ -2,7 +2,7 @@
 
 **MEMBERS:**
 - **KUSH AGHERA** (24BCE0149)
-- **SANDEEP MORE** (24BCE2883)
+- **SANDEEP MORE** ()
 
 ---
 
