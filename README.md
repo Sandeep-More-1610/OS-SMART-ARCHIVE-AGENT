@@ -1,4 +1,4 @@
-# TEAM 12- Smart Archive Agent
+# TEAM 12 — Smart Archive Agent
 
 **MEMBERS:**
 - **KUSH AGHERA** (24BCE0149)
@@ -8,18 +8,19 @@
 
 ## Overview
 
-**Smart Archive Agent** is an intelligent, security-first archiving and encryption system. It allows users to manage, compress, extract, verify, and encrypt files using either natural language commands or a rich CLI.
+**Smart Archive Agent** is an autonomous, security-centric file archiving, compression, and cryptographic protection system running on Ubuntu Linux (and WSL 2). It bridges natural-language user commands with safe, deterministic Linux system utilities (`tar`, `gzip`, `bzip2`, `xz`, `file`, `gpg`, `zip`, `unzip`).
 
-### Key Features
-- **Natural Language Intent Parsing**: Automatically detects user intentions (archive, extract, encrypt, decrypt, list, verify) with smart format and filter deduction.
-- **Enterprise-Grade Security**:
-  - **Zip Slip Prevention**: Guards against path traversal directory escapes (`../`, drive letters, and root escapes).
-  - **Decompression Bomb Detection**: Inspects archive headers to protect against excessive compression ratios and memory flooding.
-  - **Constant-time Hash Verification**: Verifies SHA-256 integrity checks without timing side channels.
-- **Authenticated Cryptography**: Uses AES-256-GCM authenticated cipher with PBKDF2-HMAC-SHA256 key derivation.
-- **Multi-Format Support**: `.zip`, `.tar`, `.tar.gz` (`.tgz`), `.tar.bz2`, and `.tar.xz`.
-- **Execution Auditing**: Immutable audit records for every action taken, with timestamps, output paths, and SHA-256 hashes.
-- **Interactive REPL & CLI**: Interactive chat session or standalone CLI commands.
+### Key Capabilities
+- **Natural Language Intent Parsing**: Automatically classifies user commands (create archive, extract, inspect, list, compress, decompress, encrypt, decrypt) and extracts source/output paths.
+- **Enterprise-Grade Security Guardrails**:
+  - **Zip Slip Prevention**: Scans archive headers before extraction to reject path traversal attacks (`../` and absolute paths).
+  - **No Shell Injection**: Executes all system utilities with structured argument lists (`subprocess.run(shell=False)`).
+  - **Non-Overwrite Safety**: Rejects overwriting existing files by default.
+  - **Disjoint Inode Validation**: Rejects operations where source and destination resolve to the identical file.
+  - **Least Privilege**: Runs purely with unprivileged user permissions (strictly avoids `sudo`).
+- **Multi-Format Archiving**: `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, and `.zip`.
+- **Cryptographic Protection**: AES-256 symmetric encryption and decryption backed by GnuPG.
+- **Dual Execution Modes**: Interactive conversational REPL shell or direct single-command CLI.
 
 ---
 
@@ -30,91 +31,124 @@ smart-archive-agent/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # CLI and interactive REPL entrypoint
-│   ├── agent.py             # Agent orchestrator and planning
-│   ├── intent.py            # Natural language intent parser
+│   ├── agent.py             # Agent orchestrator and tool dispatcher
+│   ├── intent.py            # Deterministic intent routing & regex tokenization
 │   ├── security/
 │   │   ├── __init__.py
-│   │   └── validation.py    # Path traversal & zip bomb prevention
+│   │   └── validation.py    # Path validation, Zip-Slip guard & checksums
 │   └── tools/
 │       ├── __init__.py
-│       ├── archive.py       # Multi-format archive tools & filters
-│       └── encryption.py    # AES-256-GCM authenticated encryption
+│       ├── archive.py       # Multi-format archive tools & file compression
+│       └── encryption.py    # GPG AES-256 authenticated encryption
 ├── tests/
 │   ├── __init__.py
-│   ├── test_agent.py
-│   ├── test_archive.py
-│   ├── test_encryption.py
-│   ├── test_intent.py
-│   └── test_validation.py
+│   ├── test_end_to_end.py   # Full integration & security tests
+│   └── test_intent.py       # Intent router unit tests
 ├── docs/
+│   ├── architecture.png     # High-resolution system architecture diagram
+│   ├── workflow.png         # High-resolution request execution workflow
+│   ├── PROJECT_MEMORY.md    # Architecture decisions & implementation status
+│   ├── Review_1_Smart_Archive_Agent.docx / .pdf
+│   ├── Review_2_Smart_Archive_Agent.docx / .pdf
+│   ├── Review_3_Smart_Archive_Agent.docx / .pdf
+│   ├── Review 1 Template.docx
+│   ├── Review 2 Template.docx
+│   ├── Review 3 Template.docx
 │   ├── architecture.md
 │   ├── usage.md
 │   └── api.md
-├── requirements.txt
-├── README.md
+├── pytest.ini               # Pytest configuration
+├── requirements.txt         # Dependencies specification
+├── README.md                # Project documentation
 ├── .gitignore
-└── LICENSE
+└── LICENSE                  # MIT License
 ```
 
 ---
 
-## Installation
+## Setup & Installation
+
+### Ubuntu / WSL 2 System Prerequisites:
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv tar gzip bzip2 xz-utils gnupg file unzip zip python-is-python3
+```
+
+### Installation:
 
 ```bash
 git clone https://github.com/redrighthand2007/SMART-ARCHIVE-AGENT.git
 cd SMART-ARCHIVE-AGENT
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ---
 
-## Quickstart
+## Usage
 
-### 1. Natural Language Agent
+### 1. Interactive REPL Mode
+
+Launch the agent shell:
+
 ```bash
-# Archive with natural language
-python -m app.main agent "archive app/ into backup.tar.gz"
-
-# Archive and encrypt with password
-python -m app.main agent "archive app/ into secure.zip and encrypt with password MySecret123"
-
-# Dry run simulation
-python -m app.main agent "archive app/ into test.zip --dry-run"
-
-# Safe extraction
-python -m app.main agent "extract secure.zip into ./restored with password MySecret123"
+python app/main.py
 ```
 
-### 2. Interactive Mode
-```bash
-python -m app.main interactive
+Try commands:
+```text
+agent> Create an archive of ./app ./app.tar.xz
+agent> inspect archive ./app.tar.xz
+agent> list archive ./app.tar.xz
+agent> Extract ./app.tar.xz into ./restored
+agent> compress ./notes.txt ./notes.txt.xz
+agent> decompress ./notes.txt.xz ./notes.txt
+agent> Encrypt ./backup.tar.xz ./backup.tar.xz.gpg
+agent> Decrypt ./backup.tar.xz.gpg ./backup.tar.xz
+agent> What is the weather today?    # (Intercepted by scope guardrail)
+agent> exit
 ```
 
-### 3. Dedicated CLI Commands
+### 2. Direct CLI Mode
+
+Run operations directly without opening the shell:
+
 ```bash
-# Direct archive
-python -m app.main archive ./app -o app_backup.zip
+# Archive a folder
+python app/main.py "Create an archive of ./app ./app.tar.xz"
 
-# List contents
-python -m app.main list app_backup.zip
+# Inspect archive contents
+python app/main.py "inspect archive ./app.tar.xz"
 
-# Verify archive integrity
-python -m app.main verify app_backup.zip
-
-# Encrypt & Decrypt files
-python -m app.main encrypt secret.txt -o secret.txt.enc
-python -m app.main decrypt secret.txt.enc -o secret_restored.txt
+# Extract archive
+python app/main.py "Extract ./app.tar.xz into ./output_folder"
 ```
 
 ---
 
-## Running Tests
+## Running Automated Tests
 
-Run the test suite with `pytest`:
+Run the complete test suite with `pytest`:
 
 ```bash
 pytest -v
 ```
+
+All 14 tests across intent parsing, validation, path traversal defense, and end-to-end execution pass in **under 0.10 seconds**.
+
+---
+
+## Review Reports & Documentation
+
+All formal course review reports are compiled and available in both `.docx` and `.pdf` formats inside [`docs/`](docs/):
+
+| Report | Topics Covered | Formats |
+| :--- | :--- | :--- |
+| **Review 1** | Introduction, Problem Statement, Objectives, Scope/Limitations, Literature Review, MCP Overview, Comparison Table. | [DOCX](docs/Review_1_Smart_Archive_Agent.docx), [PDF](docs/Review_1_Smart_Archive_Agent.pdf) |
+| **Review 2** | System Architecture, 5-stage loop, Fig 3.1, Component Design, Tool Mapping Table, Security Framework, Fig 4.1. | [DOCX](docs/Review_2_Smart_Archive_Agent.docx), [PDF](docs/Review_2_Smart_Archive_Agent.pdf) |
+| **Review 3** | Test Cases & Scenarios, Performance Metrics Table, Conclusion, Challenges, Future Work, Chapter 7 Walkthrough. | [DOCX](docs/Review_3_Smart_Archive_Agent.docx), [PDF](docs/Review_3_Smart_Archive_Agent.pdf) |
 
 ---
 
