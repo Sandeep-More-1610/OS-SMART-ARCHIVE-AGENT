@@ -1,122 +1,112 @@
 # Smart Archive Agent — Personal Reference & Viva Guide
-**Author Reference Sheet | Team 12 (Kush Aghera & Sandeep More)**
+**Team 12 (Kush Aghera & Sandeep More)**
 
-> **Keep this file open or printed during your review/viva presentation.** It contains the exact commands to run in front of the teacher, quick answers to common professor questions, and file paths.
+> Keep this open during the review. It has the exact demo commands, short answers to likely questions, and file locations.
 
 ---
 
-## ⚡ 1. Live Demonstration Cheat Sheet (2-Minute Demo)
+## 1. Live demonstration (about 3 minutes)
 
-In your VS Code terminal (WSL Ubuntu: `adminredrighthand2007@SuperSonic:~/SMART-ARCHIVE-AGENT$`), run:
+In the Ubuntu (WSL) terminal, prepare a small demo folder once (so the archive is small and quick):
 
 ```bash
-# Step 1: Activate the virtual environment
-source .venv/bin/activate
+mkdir -p ~/demo/project && cp -r ~/SMART-ARCHIVE-AGENT/docs ~/demo/project/
+cd ~/demo/project
+export PYTHONPATH=~/SMART-ARCHIVE-AGENT
+python3 -m smart_archive_agent --doctor
+```
+*Say:* "It checks that Python and tar, gzip, bzip2, xz, gpg and file are installed, so it runs on any Ubuntu machine, including the lab's."
 
-# Step 2: Launch the Agent
-python app/main.py
+```bash
+python3 -m smart_archive_agent
 ```
 
-### Type these exact commands in order when showing the teacher:
+> Before a second rehearsal, clear old outputs: `rm -f ~/demo/project.tar.xz.gpg ~/demo/project/docs.tar.gz; rm -rf ~/demo/project-extracted`
 
-1. **Create an Archive (Show Packaging + Compression)**:
+Then type, in order:
+
+1. **The brief's own example (chaining):**
    ```text
-   Create an archive of ./app ./app.tar.xz
+   Zip up my project folder, compress it heavily, and encrypt it.
    ```
-   *Explanation to teacher*: "The agent detects the intent to bundle `./app` using XZ compression, resolves the path, and calls GNU Tar with `-cJf`."
+   *Say:* "The planner turns one sentence into three steps: a tar.xz at maximum compression, xz -9e because of the word 'heavily'; GPG AES-256 encryption; and deleting the unencrypted copy. It shows the plan with absolute paths and runs nothing until I type y. The passphrase is typed hidden and sent to gpg on stdin, never as an argument."
+   Answer `y`, then enter a passphrase twice.
 
-2. **Inspect the Archive (Show Inspection without Extracting)**:
+   The result is `~/demo/project.tar.xz.gpg`.
+
+2. **Fast compression and inspection without extracting:**
    ```text
-   inspect archive ./app.tar.xz
+   archive ./docs quickly
+   inspect archive ./docs.tar.gz
    ```
-   *Explanation to teacher*: "The agent inspects file headers and prints the internal structure without decompressing to disk."
+   *Say:* "'quickly' selects gzip -1. Inspect reads the header and member list without writing anything."
 
-3. **Extract the Archive (Show Safe Decompression)**:
+3. **Decrypt and extract in one sentence:**
    ```text
-   Extract ./app.tar.xz into ./restored
+   decrypt ../project.tar.xz.gpg and extract it
    ```
-   *Explanation to teacher*: "The agent checks for Zip Slip attacks before extracting to `./restored`."
+   The files appear in `~/demo/project-extracted/`.
 
-4. **Show Security Guardrail (Out-of-Scope Protection)**:
+4. **Guardrails:**
    ```text
-   Delete everything on my drive
+   rm -rf /
+   archive ./docs; rm -rf ~
+   What is the weather today?
    ```
-   *Explanation to teacher*: "The agent checks domain boundaries. Since 'delete' is not an archive operation, it politely blocks the action with: *'That request is outside the Smart Archive Agent's scope.'*"
+   *Say:* "The first two are blocked by the regex blacklist before any planning. The third is outside this agent's scope, so the shell's router would send it to another agent."
 
-5. **Exit the Agent**:
-   ```text
-   exit
-   ```
+5. `exit`
 
-6. **Run Automated Tests (Show 100% Pass Rate)**:
+6. **Tests and measurements:**
    ```bash
-   pytest -v
+   cd ~/SMART-ARCHIVE-AGENT
+   python3 -m pytest -q
+   python3 benchmarks/evaluate.py
    ```
-   *Result*: All 14 tests pass in `0.07 seconds`.
+   *Say:* "58 tests pass. The benchmark measures intent accuracy on a held-out set, latency, and error recovery."
 
 ---
 
-## 🧠 2. Viva / Defense Questions & Bulletproof Answers
+## 2. Viva questions and answers
 
-### Q1: Why didn't you connect directly to a remote LLM API (like OpenAI GPT-4 or Gemini)?
-> **Answer**: "We deliberately separated intent understanding from system execution. Running an unvetted LLM directly against an OS shell creates hallucination and security hazards. Our baseline uses a local deterministic intent router that runs with zero latency, zero cloud cost, and no internet dependency, while matching the exact function schemas required to plug into an LLM or Model Context Protocol (MCP) server."
+**Q: Where is the LLM?**
+"In the Agentic Shell the base shell owns the LLM. Our job, as the brief says, is to define Linux capabilities as tools for function calling. `get_tools()` returns JSON Schema definitions of our eight tools, and `execute_tool()` runs the one the LLM picks. The model can only choose among those tools with schema-checked arguments; it never writes a shell command. We also built a rule-based planner so the agent works on any lab machine with no API key or network."
 
-### Q2: How does your code prevent the Zip Slip vulnerability?
-> **Answer**: "In `app/tools/archive.py` (`extract_archive`), before any member is extracted, we resolve the canonical target path using `.resolve()`. We verify that `destination.resolve() in target.parents`. If an archive header contains relative `../` or absolute root paths attempting to escape the destination, it is intercepted and halted with a `ValidationError`."
+**Q: How will the teacher integrate it?**
+"`from smart_archive_agent import get_tools, execute_tool, handle_request`. The package name is unique, so it won't clash with the other 34 agents. It needs only the Python standard library."
 
-### Q3: Why do you use `subprocess.run(shell=False)`?
-> **Answer**: "When `shell=True` is used, the input string is evaluated by the system shell, which allows shell command chaining like `; rm -rf /` or `| cat /etc/passwd`. By using `shell=False` and passing explicit argument vectors (e.g. `['tar', '-cJf', output, '-C', parent, name]`), parameters are treated strictly as data and cannot execute arbitrary shell syntax."
+**Q: How does 'heavily' change anything?**
+"The planner maps heavily / maximum / as small as possible to level `max`, which is `xz -9e`, gzip -9 or bzip2 -9. Quick / fast maps to `fast` (gzip -1). The benchmark shows the trade-off: bzip2 is the slowest, and xz max costs about 1.7× the time of xz normal."
 
-### Q4: What is the difference between archiving and compression in your project?
-> **Answer**: 
-> - **Archiving (`create_archive`)**: Bundles multiple files and directories into a single file container (`.tar` or `.zip`).
-> - **Compression (`compress_file`)**: Reduces the byte size of an individual file using algorithms like `xz`, `gzip`, or `bzip2`. 
-> - We support both standalone file compression and combined compressed archives (`.tar.xz`).
+**Q: How accurate is the intent recognition?**
+"80% on 20 held-out phrasings we never tuned on, and 100% on the 65 development phrasings. A first held-out set scored only 50%, which showed that keyword lists don't generalise. We rewrote the vocabulary with whole-word matching and then wrote a fresh held-out set. All four remaining misses were safe failures, and this is exactly why the shell's LLM sits in front."
 
-### Q5: How does your encryption work?
-> **Answer**: "In `app/tools/encryption.py`, we leverage GnuPG (`gpg`) with AES-256 symmetric cipher (`--cipher-algo AES256`). When encrypting, GPG prompts the operator for a passphrase in the terminal, meaning passwords are never hardcoded or exposed in plaintext command logs."
+**Q: How do you prevent Zip Slip?**
+"In `extract_archive`, every member path is resolved against the destination and must stay inside it, and symlinks or hard links are refused. This happens before the destination folder is even created. On Python 3.12+ we also use tarfile's `data` filter."
 
-### Q6: What is the Model Context Protocol (MCP)?
-> **Answer**: "MCP is an open standard designed to connect AI applications to external tools using standardized JSON schemas. Our tool functions in `app/tools/` were engineered with explicit typed inputs and structured return dictionaries so they can be exposed as an MCP server with minimal refactoring."
+**Q: Why `subprocess.run` with a list?**
+"With `shell=True` a string like `; rm -rf /` would be executed by the shell. We pass argument lists like `['tar', '-I', 'xz -9e -T0', '-cf', out, '-C', parent, name]`, so user text is only ever data."
 
----
+**Q: How is the passphrase protected?**
+"It's read with `getpass` (hidden), sent to gpg on standard input with `--pinentry-mode loopback --passphrase-fd 0`, and `--no-symkey-cache` stops gpg-agent from caching it. It never appears in the process list, logs or files. A wrong passphrase fails cleanly and leaves no output."
 
-## 📂 3. File Locations & Deliverables
+**Q: What if the LLM produces a bad tool call?**
+"`execute_tool` validates it against the schema first: unknown tool, missing or extra argument, wrong value. It's rejected with a structured error and nothing runs. Our benchmark sends 18 such bad calls, including Zip Slip, writing to /etc and a wrong passphrase. 18/18 are handled with no crash and no file written."
 
-### Final Review Reports (Word DOCX & PDF):
-- **Review 1**:
-  - `docs/Review_1_Smart_Archive_Agent.docx`
-  - `docs/Review_1_Smart_Archive_Agent.pdf`
-- **Review 2**:
-  - `docs/Review_2_Smart_Archive_Agent.docx`
-  - `docs/Review_2_Smart_Archive_Agent.pdf`
-- **Review 3**:
-  - `docs/Review_3_Smart_Archive_Agent.docx`
-  - `docs/Review_3_Smart_Archive_Agent.pdf`
-- Also saved in your Windows Downloads folder: `C:\Users\Admin\Downloads\`
-
-### Diagrams:
-- Architecture Diagram: `docs/architecture.png`
-- Workflow Diagram: `docs/workflow.png`
-
-### GitHub Repository:
-- Remote URL: [https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT](https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT)
+**Q: Archiving vs compression?**
+"Archiving bundles many files into one (tar or zip). Compression shrinks bytes (gzip, bzip2, xz). A folder must be archived before it can be compressed or encrypted, so the planner always puts `create_archive` first for folders."
 
 ---
 
-## 🛠️ 4. Quick Troubleshooting Tips
+## 3. Files
 
-- **If you open a new terminal in VS Code and `python` is not recognized**:
-  Run:
-  ```bash
-  source .venv/bin/activate
-  ```
-- **If `pytest` command is not found**:
-  Run:
-  ```bash
-  python -m pytest -v
-  ```
-- **To test single commands without entering the loop**:
-  ```bash
-  python app/main.py "create an archive of ./app ./app.tar.xz"
-  ```
+* Code: `smart_archive_agent/` (`agent.py`, `planner.py`, `intent.py`, `tools/`, `security/`)
+* Tests: `tests/` · Benchmark: `benchmarks/evaluate.py`, results in `benchmarks/results.json`
+* Reports: `docs/Review_1_…`, `docs/Review_2_…`, `docs/Review_3_Smart_Archive_Agent.docx` / `.pdf`
+* GitHub: https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT
+
+## 4. Troubleshooting
+
+* `No module named smart_archive_agent`: run from the repository root, or `export PYTHONPATH=/path/to/repo`.
+* `pytest: command not found`: `python3 -m pip install pytest`, then `python3 -m pytest -q`.
+* A tool is missing: `python3 -m smart_archive_agent --doctor` prints the `apt install` line.

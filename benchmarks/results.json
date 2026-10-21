@@ -1,0 +1,329 @@
+{
+  "environment": {
+    "python": "3.14.4",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 16
+  },
+  "intent": {
+    "total": 65,
+    "correct": 65,
+    "accuracy_pct": 100.0,
+    "by_category": {
+      "simple": {
+        "correct": 30,
+        "total": 30,
+        "pct": 100.0
+      },
+      "chained": {
+        "correct": 15,
+        "total": 15,
+        "pct": 100.0
+      },
+      "malicious": {
+        "correct": 13,
+        "total": 13,
+        "pct": 100.0
+      },
+      "out_of_scope": {
+        "correct": 7,
+        "total": 7,
+        "pct": 100.0
+      }
+    },
+    "failures": [],
+    "planning_ms": {
+      "mean": 0.066,
+      "p95": 0.134,
+      "max": 0.253
+    }
+  },
+  "intent_heldout": {
+    "total": 20,
+    "correct": 16,
+    "accuracy_pct": 80.0,
+    "by_category": {
+      "simple": {
+        "correct": 6,
+        "total": 10,
+        "pct": 60.0
+      },
+      "chained": {
+        "correct": 5,
+        "total": 5,
+        "pct": 100.0
+      },
+      "malicious": {
+        "correct": 3,
+        "total": 3,
+        "pct": 100.0
+      },
+      "out_of_scope": {
+        "correct": 2,
+        "total": 2,
+        "pct": 100.0
+      }
+    },
+    "failures": [
+      {
+        "request": "turn ./project into a tar.gz",
+        "expected": [
+          "create_archive"
+        ],
+        "got": "unrelated",
+        "expected_level": null,
+        "got_level": null
+      },
+      {
+        "request": "get the files out of ./sample.tar.xz",
+        "expected": [
+          "extract_archive"
+        ],
+        "got": "unrelated",
+        "expected_level": null,
+        "got_level": null
+      },
+      {
+        "request": "what files does ./sample.zip contain",
+        "expected": [
+          "list_archive"
+        ],
+        "got": "unrelated",
+        "expected_level": null,
+        "got_level": null
+      },
+      {
+        "request": "check what type of archive ./sample.tar.xz is",
+        "expected": [
+          "inspect_archive"
+        ],
+        "got": [
+          "create_archive"
+        ],
+        "expected_level": null,
+        "got_level": "normal"
+      }
+    ],
+    "planning_ms": {
+      "mean": 0.06,
+      "p95": 0.114,
+      "max": 0.137
+    }
+  },
+  "execution": [
+    {
+      "input_mb": 1.25,
+      "format": "gz",
+      "level": "fast",
+      "ms": 9.8,
+      "ratio_pct": 20.59
+    },
+    {
+      "input_mb": 1.25,
+      "format": "gz",
+      "level": "normal",
+      "ms": 12.9,
+      "ratio_pct": 20.31
+    },
+    {
+      "input_mb": 1.25,
+      "format": "bz2",
+      "level": "normal",
+      "ms": 203.1,
+      "ratio_pct": 20.2
+    },
+    {
+      "input_mb": 1.25,
+      "format": "xz",
+      "level": "normal",
+      "ms": 74.6,
+      "ratio_pct": 20.12
+    },
+    {
+      "input_mb": 1.25,
+      "format": "xz",
+      "level": "max",
+      "ms": 137.4,
+      "ratio_pct": 20.12
+    },
+    {
+      "input_mb": 1.25,
+      "format": "zip",
+      "level": "normal",
+      "ms": 7.6,
+      "ratio_pct": 20.3
+    },
+    {
+      "input_mb": 10.25,
+      "format": "gz",
+      "level": "fast",
+      "ms": 17.4,
+      "ratio_pct": 3.06
+    },
+    {
+      "input_mb": 10.25,
+      "format": "gz",
+      "level": "normal",
+      "ms": 27.2,
+      "ratio_pct": 2.77
+    },
+    {
+      "input_mb": 10.25,
+      "format": "bz2",
+      "level": "normal",
+      "ms": 1666.4,
+      "ratio_pct": 2.49
+    },
+    {
+      "input_mb": 10.25,
+      "format": "xz",
+      "level": "normal",
+      "ms": 206.4,
+      "ratio_pct": 2.47
+    },
+    {
+      "input_mb": 10.25,
+      "format": "xz",
+      "level": "max",
+      "ms": 365.5,
+      "ratio_pct": 2.47
+    },
+    {
+      "input_mb": 10.25,
+      "format": "zip",
+      "level": "normal",
+      "ms": 39.7,
+      "ratio_pct": 2.77
+    },
+    {
+      "input_mb": 0.253,
+      "format": "gpg-aes256",
+      "level": "-",
+      "ms": 134.2,
+      "ratio_pct": null,
+      "success": true
+    },
+    {
+      "input_mb": 1.25,
+      "format": "chain: tar.xz max + gpg + cleanup",
+      "level": "max",
+      "ms": 288.7,
+      "ratio_pct": null,
+      "success": true
+    }
+  ],
+  "error_recovery": {
+    "total": 18,
+    "graceful": 18,
+    "rate_pct": 100.0,
+    "cases": [
+      {
+        "case": "unknown tool name",
+        "graceful": true,
+        "error": "unknown tool 'delete_files'",
+        "new_files": []
+      },
+      {
+        "case": "hallucinated shell tool",
+        "graceful": true,
+        "error": "unknown tool 'bash'",
+        "new_files": []
+      },
+      {
+        "case": "missing required argument",
+        "graceful": true,
+        "error": "missing argument 'output_path'",
+        "new_files": []
+      },
+      {
+        "case": "extra injected argument",
+        "graceful": true,
+        "error": "unexpected argument 'shell'",
+        "new_files": []
+      },
+      {
+        "case": "invalid enum value",
+        "graceful": true,
+        "error": "argument 'level' must be one of ['fast', 'normal', 'max']",
+        "new_files": []
+      },
+      {
+        "case": "wrong argument type",
+        "graceful": true,
+        "error": "argument 'archive_path' must be a non-empty string",
+        "new_files": []
+      },
+      {
+        "case": "empty path",
+        "graceful": true,
+        "error": "argument 'source_path' must be a non-empty string",
+        "new_files": []
+      },
+      {
+        "case": "arguments not an object",
+        "graceful": true,
+        "error": "arguments must be an object",
+        "new_files": []
+      },
+      {
+        "case": "non-existent source",
+        "graceful": true,
+        "error": "Path does not exist: /tmp/saa-bench-42jsm74n/nope",
+        "new_files": []
+      },
+      {
+        "case": "overwrite existing output",
+        "graceful": true,
+        "error": "Output already exists: /tmp/saa-bench-42jsm74n/exists.tar.xz. Choose another name.",
+        "new_files": []
+      },
+      {
+        "case": "write into /etc",
+        "graceful": true,
+        "error": "Refusing to write into a protected system location: /etc/backup.tar.xz",
+        "new_files": []
+      },
+      {
+        "case": "write into /usr/bin",
+        "graceful": true,
+        "error": "Refusing to write into a protected system location: /usr/bin/a.xz",
+        "new_files": []
+      },
+      {
+        "case": "archive inside itself",
+        "graceful": true,
+        "error": "The archive cannot be written inside the folder being archived.",
+        "new_files": []
+      },
+      {
+        "case": "folder passed to compress_file",
+        "graceful": true,
+        "error": "Compression input must be a file. Folders are archived with create_archive.",
+        "new_files": []
+      },
+      {
+        "case": "Zip Slip archive",
+        "graceful": true,
+        "error": "Archive contains a path that escapes the destination.",
+        "new_files": []
+      },
+      {
+        "case": "unsupported decompress format",
+        "graceful": true,
+        "error": "Cannot infer compression format. Use a .gz, .bz2, or .xz file.",
+        "new_files": []
+      },
+      {
+        "case": "same input and output",
+        "graceful": true,
+        "error": "The output path must differ from the source path.",
+        "new_files": []
+      },
+      {
+        "case": "wrong decryption passphrase",
+        "graceful": true,
+        "error": "GPG decryption failed. Check the passphrase. (wrong passphrase)",
+        "new_files": []
+      }
+    ]
+  }
+}

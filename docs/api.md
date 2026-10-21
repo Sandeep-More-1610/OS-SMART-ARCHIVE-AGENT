@@ -1,70 +1,45 @@
-# Smart Archive Agent API Reference
+# Smart Archive Agent — API Reference
 
-## Module: `app.agent`
+## Package `smart_archive_agent`
 
-### `SmartArchiveAgent`
-Orchestrator class coordinating intent parsing, planning, validation, and execution.
+| Name | Description |
+| :--- | :--- |
+| `AGENT_NAME` | `"smart_archive_agent"` |
+| `AGENT_DESCRIPTION` | One-line description for the shell's agent router |
+| `get_tools(style="generic")` | Tool definitions. `"generic"`: `{name, description, parameters}`; `"openai"`: `{type: "function", function: {...}}`; `"anthropic"`: `{name, description, input_schema}` |
+| `execute_tool(name, args, passphrase=None) -> dict` | Validates and runs one tool call. Never raises. |
+| `handle_request(text, confirm=None, passphrase=None) -> dict` | Plans and runs a plain-English request. `confirm(plan) -> bool` is called before writing (None = approved). `passphrase` is a string or `function(tool_name) -> str`. |
 
-- **`plan(intent: ArchiveIntent) -> List[PlanStep]`**: Generates step-by-step execution roadmap without applying filesystem changes.
-- **`execute(query_or_intent: Union[str, ArchiveIntent], **overrides) -> AgentResult`**: Executes an archiving or crypto operation.
-- **`audit_log: List[Dict[str, Any]]`**: History of all operations with execution status, timings, and checksums.
+## Tools
 
-### `AgentResult`
-Dataclass containing operation output:
-- `success: bool`
-- `action: str`
-- `message: str`
-- `output_files: List[str]`
-- `metrics: Dict[str, Any]`
-- `audit_id: Optional[str]`
-- `plan: List[Dict[str, Any]]`
-- `error: Optional[str]`
+| Tool | Required arguments | Optional arguments |
+| :--- | :--- | :--- |
+| `create_archive` | `source_path`, `output_path` | `compression`: `auto`, `none`, `gz`, `bz2`, `xz`, `zip` (default `auto`, from the extension); `level`: `fast`, `normal`, `max` |
+| `extract_archive` | `archive_path`, `destination_path` | — |
+| `list_archive` | `archive_path` | — |
+| `inspect_archive` | `archive_path` | — |
+| `compress_file` | `source_path`, `output_path` | `algorithm`: `gz`, `bz2`, `xz`; `level` |
+| `decompress_file` | `source_path`, `output_path` | — |
+| `encrypt_file` | `source_path`, `output_path` | passphrase passed separately |
+| `decrypt_file` | `source_path`, `output_path` | passphrase passed separately |
 
----
+## Result dictionary
 
-## Module: `app.intent`
+| Key | When |
+| :--- | :--- |
+| `success` | always |
+| `operation` | always: the tool name, `plan`, `blocked`, `unrelated`, `cancelled`, ... |
+| `message` | always, human readable |
+| `output` | path of the file or folder produced |
+| `original_bytes`, `archive_bytes` | archive and compression results |
+| `entries`, `entries_count`, `entries_preview`, `type` | list / inspect results |
+| `steps`, `plan` | multi-step requests: each step's result and the plan shown to the user |
+| `missing` | a required detail could not be found in the request |
+| `error`, `completed_steps` | failures; `completed_steps` says how far a plan got |
 
-### `ArchiveIntent`
-Represents parsed intent:
-- `action: ActionType` (ARCHIVE, EXTRACT, ENCRYPT, DECRYPT, LIST, VERIFY)
-- `sources: List[str]`
-- `destination: Optional[str]`
-- `format: Optional[str]`
-- `encrypt: bool`
-- `decrypt: bool`
-- `password: Optional[str]`
-- `filters: Dict[str, Any]`
-- `dry_run: bool`
-- `confidence: float`
+## Internal modules
 
----
-
-## Module: `app.security.validation`
-
-- **`is_safe_path(base_dir: str | Path, target_path: str | Path) -> bool`**: Returns True if target is within base_dir.
-- **`resolve_safe_path(base_dir: str | Path, target_path: str | Path) -> Path`**: Resolves path and raises `PathTraversalError` on traversal attempts.
-- **`sanitize_filename(name: str) -> str`**: Cleans illegal filesystem characters.
-- **`calculate_checksum(file_path: str | Path, algorithm: str = 'sha256') -> str`**: Calculates cryptographic digest.
-- **`verify_checksum(file_path: str | Path, expected_hash: str, algorithm: str = 'sha256') -> bool`**: Constant-time verification.
-- **`validate_archive_safety(archive_path: str | Path, ...)`**: Audits archives for Zip Slip and decompression bombs.
-
----
-
-## Module: `app.tools.archive`
-
-- **`create_archive(sources, dest_path, format=None, compression_level=6, filter_criteria=None) -> Path`**
-- **`extract_archive(archive_path, dest_dir, safe=True, members=None) -> List[Path]`**
-- **`list_archive(archive_path) -> List[Dict[str, Any]]`**
-- **`inspect_archive(archive_path) -> Dict[str, Any]`**
-- **`verify_archive(archive_path) -> bool`**
-
----
-
-## Module: `app.tools.encryption`
-
-- **`generate_key() -> str`**: Generates a 256-bit URL-safe base64 key.
-- **`encrypt_bytes(data: bytes, key_or_password: str | bytes) -> bytes`**
-- **`decrypt_bytes(payload: bytes, key_or_password: str | bytes) -> bytes`**
-- **`encrypt_file(src_path, dest_path=None, password_or_key="") -> Path`**
-- **`decrypt_file(src_path, dest_path=None, password_or_key="") -> Path`**
-- **`is_encrypted_file(file_path) -> bool`**
+* `intent.classify(text) -> Intent(operation, args, missing, message)`
+* `planner.plan_local(text) -> Plan(status, steps, message, missing, operation)`, `validate_plan(plan) -> list[str]`, `describe(plan) -> list[str]`
+* `security.guardrails.check_request(text) -> str | None`, `PROTECTED_DIRS`
+* `security.validation.resolve_existing_path`, `resolve_output_path`, `reject_same_path`, `calculate_checksum`, `ValidationError`

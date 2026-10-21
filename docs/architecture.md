@@ -1,49 +1,41 @@
-# Smart Archive Agent Architecture
-
-## System Overview
-
-The **Smart Archive Agent** is an autonomous, security-centric file archiving and cryptographic protection system. It translates natural language instructions and high-level goals into safe, multi-step execution plans with built-in path-traversal safeguards and authenticated encryption.
+# Smart Archive Agent — Architecture
 
 ```mermaid
 flowchart TD
-    User([User Request / CLI]) --> Main[CLI & REPL Entrypoint\napp/main.py]
-    Main --> Agent[SmartArchiveAgent Orchestrator\napp/agent.py]
-    Agent --> IntentParser[Intent Parsing Engine\napp/intent.py]
-    IntentParser --> Plan[Execution Planner & Safety Guard]
-    Plan --> SecVal[Security Validation\napp/security/validation.py]
-    SecVal --> ArchiveTools[Archive Engine\napp/tools/archive.py]
-    SecVal --> EncryptTools[Crypto Engine\napp/tools/encryption.py]
-    ArchiveTools --> Disk[(Filesystem)]
-    EncryptTools --> Disk
-    Agent --> AuditLog[(Audit Log)]
+    User([User text or Agentic Shell]) --> Main[main.py<br/>CLI, interactive shell, --doctor]
+    Shell([Agentic Shell LLM]) -->|get_tools / execute_tool| Registry
+    Main --> Agent[agent.py<br/>handle_request]
+    Agent --> Guard[security/guardrails.py<br/>destructive-command blacklist]
+    Guard --> Planner[planner.py + intent.py<br/>intent, chaining, levels, default names]
+    Planner --> Validate[validate_plan<br/>schemas + clean-up rules]
+    Validate --> Confirm{Human confirmation<br/>y / N}
+    Confirm -->|yes| Registry[tools/registry.py<br/>execute_tool]
+    Registry --> Val[security/validation.py<br/>paths, overwrite, protected folders]
+    Val --> Archive[tools/archive.py<br/>tar gzip bzip2 xz zip]
+    Val --> Crypto[tools/encryption.py<br/>gpg AES-256]
+    Archive --> Disk[(Filesystem)]
+    Crypto --> Disk
 ```
 
----
+## Request lifecycle
 
-## Component Responsibilities
+1. **Guardrail** — `check_request()` matches the raw text against a regex blacklist (`rm -rf`, `mkfs`, `dd if=`, fork bomb, `shutdown`, `$(...)`, `; rm`, a bare `/`). A match stops the request before any planning.
+2. **Intent** — `classify()` removes file paths from the text, then matches whole-word verb vocabularies in a fixed priority order: decrypt, encrypt, extract, decompress, list, compress, archive. Paths are extracted with `PATH_RE`.
+3. **Planning** — `plan_local()` turns the intent into ordered `Step`s:
+   * folders are always archived before compression or encryption;
+   * *heavily / maximum / as small as possible* → level `max`; *quick / fast* → `fast`;
+   * *zip file* → zip format, *gzip / bzip2 / xz* → that algorithm, otherwise the output extension decides;
+   * missing output names are chosen next to the source and made unique;
+   * after encrypting an archive the agent named itself, a `remove_intermediate` step deletes the plaintext copy.
+4. **Validation** — `validate_plan()` checks every step against the JSON schemas in `tools/registry.py`, and allows `remove_intermediate` only for files produced earlier in the same plan.
+5. **Confirmation** — any plan that writes is shown with absolute paths; nothing runs without `y`.
+6. **Execution** — `execute_tool()` re-validates arguments, collects the passphrase if needed, and calls the tool. Tools resolve paths, refuse protected locations and existing outputs, and run Linux utilities through `subprocess.run` with argument lists.
+7. **Result** — a dictionary with `success`, `message`, `output`, and `error`; a failed step stops the plan and reports which steps finished.
 
-### 1. Agent Orchestrator (`app/agent.py`)
-- Acts as the central brain and coordinator.
-- Manages plan generation, preview dry-runs, and execution phases.
-- Maintains an immutable runtime audit trail with SHA-256 integrity proofs.
+## Integration with the Agentic Shell
 
-### 2. Intent Parsing Engine (`app/intent.py`)
-- Understands natural language statements, e.g.:
-  - *"archive all .py files in app to backup.zip and encrypt with password Secret"*
-  - *"extract package.zip.enc into ./dist with password Secret"*
-- Extracts primary action (`ARCHIVE`, `EXTRACT`, `ENCRYPT`, `DECRYPT`, `LIST`, `VERIFY`), target paths, formats, filters, and security parameters.
+The base shell owns the LLM. It reads `get_tools()` (plain JSON Schema, or OpenAI / Anthropic wrapping), lets its model pick a tool, and calls `execute_tool(name, args, passphrase=...)`. The model can only choose among the eight tools and their schema-checked arguments; it never builds a shell command. `handle_request()` is the offline path that needs no LLM.
 
-### 3. Security Validation Subsystem (`app/security/validation.py`)
-- **Zip Slip / Path Traversal Prevention**: Resolves target paths relative to strict base boundaries and aborts if any path attempts escape (`../`, root slashes, drive letters).
-- **Decompression Bomb Guard**: Analyzes archive headers prior to extraction to detect anomalous compression ratios (> 200:1), total uncompressed byte limits (default 1GB), and file count floods.
-- **Cryptographic Verification**: Verifies SHA-256 digests in constant time (`hmac.compare_digest`) to prevent timing side channels.
+## Why the planner is rule-based
 
-### 4. Archive Tools (`app/tools/archive.py`)
-- Creates and manages archives across multiple formats: `.zip`, `.tar`, `.tar.gz`, `.tar.bz2`, and `.tar.xz`.
-- Provides smart filtering by file extensions, patterns, file size bounds, and modification timestamps.
-- Automatically excludes runtime noise (`__pycache__`, `.git`, `.DS_Store`).
-
-### 5. Encryption Tools (`app/tools/encryption.py`)
-- Provides authenticated symmetric encryption via **AES-256-GCM**.
-- Key derivation using **PBKDF2-HMAC-SHA256** (100,000 iterations) with a 16-byte cryptographically secure random salt and a 12-byte initialization vector (nonce).
-- Appends `SAA_ENC_v1` magic header for fast file format identification and tamper prevention.
+The agent must work on any lab machine without an API key or network, and its behaviour must be predictable for safety review. The LLM path is provided by the shell through the tool schemas. The benchmark shows the trade-off: the rule-based planner reaches 80% on unseen phrasings, which is why the LLM front end matters for open-ended wording.

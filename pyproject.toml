@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-archive-agent"
+version = "1.0.0"
+description = "Agent #12 of the Agentic Shell: archive, compress, extract and encrypt files from plain English on Linux."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Kush Aghera (24BCE0149)" },
+    { name = "Sandeep More (24BCE2883)" },
+]
+requires-python = ">=3.8"
+dependencies = []          # standard library only; needs tar, gzip, bzip2, xz, gpg, file on the system
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+smart-archive-agent = "smart_archive_agent.main:cli"
+
+[project.urls]
+Repository = "https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT"
+
+[tool.setuptools.packages.find]
+include = ["smart_archive_agent*"]

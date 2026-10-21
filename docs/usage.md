@@ -1,85 +1,52 @@
-# Smart Archive Agent Usage Guide
+# Smart Archive Agent — Usage Guide
 
-## Quickstart
+Run every command from the repository root on Linux (Ubuntu, Debian or WSL 2).
 
-Run the agent from the command line:
+## Check the machine
 
 ```bash
-# Natural Language request
-python -m app.main agent "archive app/ to backup.zip and encrypt with password MySecretKey!"
-
-# Interactive Agent Mode
-python -m app.main interactive
+python3 -m smart_archive_agent --doctor
 ```
 
----
+Lists Python and `tar`, `gzip`, `bzip2`, `xz`, `gpg`, `file`, and prints the `sudo apt install ...` line for anything missing.
 
-## Command Line Interface (CLI)
+## Interactive shell
 
-### 1. Natural Language Agent (`agent`)
 ```bash
-# Archive with auto-detection
-python -m app.main agent "archive src into dist.tar.gz"
-
-# Dry run (preview without altering filesystem)
-python -m app.main agent "archive logs to logs.zip --dry-run"
-
-# Safe extract with password
-python -m app.main agent "extract backup.zip.enc into ./restored with password MySecretKey!"
+python3 -m smart_archive_agent
 ```
 
-### 2. Manual Archive (`archive`)
+Type requests in plain English. Plans that write files are shown first and need `y`. Encryption asks for the passphrase twice with hidden input. Type `exit` to quit.
+
+## One request
+
 ```bash
-# Basic zip
-python -m app.main archive ./src -o bundle.zip
-
-# Filter only specific extensions (.py and .json)
-python -m app.main archive ./src -o py_code.tar.gz -f tar.gz --filter-ext .py --filter-ext .json
-
-# Archive and encrypt
-python -m app.main archive ./confidential -o confidential.zip --encrypt -p "MyStrongPassword"
+python3 -m smart_archive_agent "archive ./src with maximum compression"
+python3 -m smart_archive_agent --yes "create a zip file of ./src"     # skip the confirmation
 ```
 
-### 3. Safe Extraction (`extract`)
-```bash
-python -m app.main extract bundle.zip -d ./output_dir
-```
+The exit code is 0 on success and 1 on failure.
 
-### 4. File Encryption and Decryption (`encrypt` / `decrypt`)
-```bash
-# Encrypt
-python -m app.main encrypt sensitive.txt -o sensitive.txt.enc
+## Request examples
 
-# Decrypt
-python -m app.main decrypt sensitive.txt.enc -o restored.txt
-```
+| Request | Plan |
+| :--- | :--- |
+| `Zip up my project folder, compress it heavily, and encrypt it.` | tar.xz (xz -9e) → GPG AES-256 → delete the plaintext archive |
+| `back up ./src quickly` | `src.tar.gz` at gzip -1 |
+| `archive ./src to ../src.tar.bz2` | bzip2 tar archive at that path |
+| `create a zip file of ./photos` | `photos.zip` |
+| `compress ./data.csv as small as possible` | `data.csv.xz` at xz -9e |
+| `what is inside ./photos.zip` | list entries |
+| `inspect archive ./src.tar.xz` | type, entry count, preview |
+| `extract ./src.tar.xz into ./restored` | safe extraction |
+| `decompress ./data.csv.xz` | `data.csv` |
+| `encrypt ./notes.txt` | `notes.txt.gpg` |
+| `decrypt ./src.tar.xz.gpg and extract it` | decrypt → extract → delete the temporary archive |
 
-### 5. Inspect and Verify (`list` / `verify`)
-```bash
-# List contents
-python -m app.main list bundle.zip
+Phrases such as "my project folder", "this folder" or "the current directory" mean the folder you are in.
 
-# Verify integrity and checksums
-python -m app.main verify bundle.zip
-```
+## Requests that are refused
 
----
-
-## Python API Usage
-
-You can embed the agent inside existing Python applications:
-
-```python
-from app.agent import SmartArchiveAgent
-
-agent = SmartArchiveAgent()
-
-# Execute high-level command
-result = agent.execute("archive logs/ to logs_backup.zip and encrypt with password Secret42")
-
-if result.success:
-    print("Archive created:", result.output_files)
-    print("SHA-256:", result.metrics["checksum"])
-else:
-    print("Failed:", result.error)
-```
+* Out of scope, e.g. `what is the weather` or `kill the process on port 8080`: these belong to other agents.
+* Destructive, e.g. `rm -rf /`, `Delete everything on my drive`, `archive ./src; rm -rf ~`: blocked by the guardrail.
+* Writing into system folders such as `/etc` or `/usr/bin`, overwriting an existing file, or extracting an archive whose entries escape the destination.

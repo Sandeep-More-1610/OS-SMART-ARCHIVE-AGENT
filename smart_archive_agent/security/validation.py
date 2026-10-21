@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pathlib import Path
 import os
 
@@ -18,6 +19,9 @@ def resolve_output_path(raw_path: str) -> Path:
     path = Path(os.path.expanduser(raw_path.strip())).resolve()
     if not path.parent.exists():
         raise ValidationError(f"Output directory does not exist: {path.parent}")
+    from smart_archive_agent.security.guardrails import PROTECTED_DIRS
+    if any(str(path) == d or str(path).startswith(d + "/") for d in PROTECTED_DIRS):
+        raise ValidationError(f"Refusing to write into a protected system location: {path}")
     return path
 
 def reject_same_path(source: Path, output: Path) -> None:

@@ -4,14 +4,14 @@ import shutil
 from pathlib import Path
 import pytest
 
-from app.security.validation import (
+from smart_archive_agent.security.validation import (
     resolve_existing_path,
     resolve_output_path,
     reject_same_path,
     ValidationError,
 )
-from app.tools import archive
-from app.agent import handle_request
+from smart_archive_agent.tools import archive
+from smart_archive_agent.agent import handle_request
 
 
 def test_validation_rules(tmp_path):
@@ -108,7 +108,7 @@ def test_agent_handle_request_pipeline(tmp_path):
 
 
 def test_calculate_checksum(tmp_path):
-    from app.security.validation import calculate_checksum
+    from smart_archive_agent.security.validation import calculate_checksum
     test_file = tmp_path / "checksum_test.txt"
     test_file.write_text("Integrity validation content", encoding="utf-8")
     digest = calculate_checksum(test_file)
@@ -128,8 +128,15 @@ def test_output_already_exists_rejection(tmp_path):
 
 
 def test_missing_argument_prompt():
-    res = handle_request("archive ./some_folder")
+    # No path and no recognisable folder phrase: the agent asks instead of guessing.
+    res = handle_request("please archive it")
     assert res["success"] is False
     assert "missing" in res
-    assert "output_path" in res["missing"]
+    assert "source_path" in res["missing"]
+
+
+def test_nonexistent_source_is_reported_not_crashed():
+    res = handle_request("archive ./some_folder")
+    assert res["success"] is False
+    assert "does not exist" in res["error"]
 

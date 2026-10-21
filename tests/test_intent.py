@@ -1,4 +1,4 @@
-from app.intent import classify
+from smart_archive_agent.intent import classify
 
 def test_unrelated_request_is_rejected():
     assert classify("What is the weather today?").operation == "unrelated"

@@ -1,39 +1,18 @@
 # OS Project — Smart Archive Agent: Project Memory
 
-## User-confirmed decisions (2026-10-15)
-- Project: Agentic Shell — Smart Archive Agent.
-- Start coding from scratch; there was no existing implementation.
-- Use Python and Ubuntu.
-- Build one standalone terminal agent, not the class-wide 35-agent system.
-- Accept human input in the terminal.
-- If a request belongs to archive/storage operations, route it to the relevant predefined operation; otherwise say it is outside this agent's scope.
-- Required capabilities: archive creation, compression, extraction, inspection, encryption, decryption, decompression.
-- No separate LLM-selection exercise is required at this stage.
-- Review 1 and Review 2 templates define required chapters.
-- Review 2 must include diagrams, flowcharts, explanations for each, structure, architecture, and workflow.
-- Do not prioritize class-wide integration/interface contract at this stage.
+## Decisions
+- Project: Agentic Shell, Agent #12 Smart Archive Agent. Python on Ubuntu/WSL 2.
+- One standalone agent that the teacher integrates into the class-wide shell with 34 other agents. It must run on his lab or personal machine, not only ours.
+- The base shell owns the LLM. This agent provides tool definitions for function calling (`get_tools`) and runs them (`execute_tool`). It also has a built-in rule-based planner (`handle_request`) so it works with no API key or network.
+- Package renamed from `app` to `smart_archive_agent` (2026-10-21) to avoid clashing with other teams' packages.
+- Python 3.8+ syntax, standard library only; Linux tools: tar, gzip, bzip2, xz, gpg, file (`--doctor` checks them).
+- Review templates: Review 1 = Ch 1–2, Review 2 = Ch 3–4, Review 3 = Ch 5–7 (Testing & Results, Conclusion & Future Scope, Screenshots).
 
-## Template mapping
-- Review 1: Chapter 1 Introduction; Chapter 2 Literature Review & Theoretical Background.
-- Review 2: Chapter 3 System Architecture & Design; Chapter 4 Implementation Methodology.
+## Accuracy rule
+Never claim an LLM, MCP server, LangChain or any feature that is not in the source code. The agent exposes LLM-ready tool schemas; it does not call an LLM itself. MCP is future work.
 
-## Important accuracy rule
-Do not claim an LLM, MCP, LangChain, or any other framework is implemented unless it is actually in the source code. The initial source package currently uses a deterministic local intent router as a runnable baseline. A model-backed intent adapter is a planned enhancement, not implemented functionality.
-
-## Current package contents
-- `app/main.py`: entry point
-- `app/agent.py`: terminal loop and operation dispatch
-- `app/intent.py`: deterministic intent classification
-- `app/tools/archive.py`: archive, list, inspect, extract, compression and decompression functions
-- `app/tools/encryption.py`: GPG encryption/decryption functions
-- `app/security/validation.py`: basic path validation
-- `tests/test_intent.py`: initial intent tests
-- `README.md`: setup and usage
-- `docs/PROJECT_MEMORY.md`: persistent project decisions and status
-
-## Known limitations requiring next iteration
-- Natural-language parsing is keyword-based and does not yet call an LLM.
-- Some intent/path extraction cases need testing and refinement.
-- Full end-to-end Linux execution tests have not been run in this hosted environment.
-- Security checks and archive extraction behavior require careful testing before use on important data.
-- Report documents describe the current implementation honestly and identify planned LLM integration separately.
+## Status (2026-10-22)
+- Brief's example "Zip up my project folder, compress it heavily, and encrypt it." works end to end: tar.xz (xz -9e) → GPG AES-256 → plaintext copy deleted.
+- 52 tests pass on Ubuntu 26.04.1 (WSL 2), Python 3.14.
+- Benchmark (`benchmarks/evaluate.py`): held-out intent accuracy 16/20 = 80%; development 65/65; error recovery 18/18; planning < 0.2 ms.
+- Not verified: running on Python 3.8–3.13 (only 3.14 was available); `docs/architecture.png` and `docs/workflow.png` still show the old `app/` module names.
