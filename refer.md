@@ -76,7 +76,7 @@ Then type, in order:
 "`from smart_archive_agent import get_tools, execute_tool, handle_request`. The package name is unique, so it won't clash with the other 34 agents. It needs only the Python standard library."
 
 **Q: How does 'heavily' change anything?**
-"The planner maps heavily / maximum / as small as possible to level `max`, which is `xz -9e`, gzip -9 or bzip2 -9. Quick / fast maps to `fast` (gzip -1). The benchmark shows the trade-off: bzip2 is the slowest, and xz max costs about 1.7× the time of xz normal."
+"The planner maps heavily / maximum / as small as possible to level `max`, which is `xz -9e`, gzip -9 or bzip2 -9. Quick / fast maps to `fast` (gzip -1). The benchmark shows the trade-off: bzip2 is the slowest, and xz max costs about 1.8× the time of xz normal."
 
 **Q: How accurate is the intent recognition?**
 "80% on 20 held-out phrasings we never tuned on, and 100% on the 65 development phrasings. A first held-out set scored only 50%, which showed that keyword lists don't generalise. We rewrote the vocabulary with whole-word matching and then wrote a fresh held-out set. All four remaining misses were safe failures, and this is exactly why the shell's LLM sits in front."

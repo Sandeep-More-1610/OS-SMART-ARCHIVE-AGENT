@@ -32,9 +32,9 @@
     },
     "failures": [],
     "planning_ms": {
-      "mean": 0.066,
-      "p95": 0.134,
-      "max": 0.253
+      "mean": 0.059,
+      "p95": 0.122,
+      "max": 0.237
     }
   },
   "intent_heldout": {
@@ -104,9 +104,9 @@
       }
     ],
     "planning_ms": {
-      "mean": 0.06,
-      "p95": 0.114,
-      "max": 0.137
+      "mean": 0.056,
+      "p95": 0.125,
+      "max": 0.132
     }
   },
   "execution": [
@@ -114,91 +114,91 @@
       "input_mb": 1.25,
       "format": "gz",
       "level": "fast",
-      "ms": 9.8,
+      "ms": 8.7,
       "ratio_pct": 20.59
     },
     {
       "input_mb": 1.25,
       "format": "gz",
       "level": "normal",
-      "ms": 12.9,
+      "ms": 10.9,
       "ratio_pct": 20.31
     },
     {
       "input_mb": 1.25,
       "format": "bz2",
       "level": "normal",
-      "ms": 203.1,
+      "ms": 195.1,
       "ratio_pct": 20.2
     },
     {
       "input_mb": 1.25,
       "format": "xz",
       "level": "normal",
-      "ms": 74.6,
+      "ms": 70.4,
       "ratio_pct": 20.12
     },
     {
       "input_mb": 1.25,
       "format": "xz",
       "level": "max",
-      "ms": 137.4,
+      "ms": 128.7,
       "ratio_pct": 20.12
     },
     {
       "input_mb": 1.25,
       "format": "zip",
       "level": "normal",
-      "ms": 7.6,
+      "ms": 7.3,
       "ratio_pct": 20.3
     },
     {
       "input_mb": 10.25,
       "format": "gz",
       "level": "fast",
-      "ms": 17.4,
+      "ms": 13.5,
       "ratio_pct": 3.06
     },
     {
       "input_mb": 10.25,
       "format": "gz",
       "level": "normal",
-      "ms": 27.2,
+      "ms": 26.5,
       "ratio_pct": 2.77
     },
     {
       "input_mb": 10.25,
       "format": "bz2",
       "level": "normal",
-      "ms": 1666.4,
+      "ms": 1623.2,
       "ratio_pct": 2.49
     },
     {
       "input_mb": 10.25,
       "format": "xz",
       "level": "normal",
-      "ms": 206.4,
+      "ms": 188.1,
       "ratio_pct": 2.47
     },
     {
       "input_mb": 10.25,
       "format": "xz",
       "level": "max",
-      "ms": 365.5,
+      "ms": 343.5,
       "ratio_pct": 2.47
     },
     {
       "input_mb": 10.25,
       "format": "zip",
       "level": "normal",
-      "ms": 39.7,
+      "ms": 31.3,
       "ratio_pct": 2.77
     },
     {
       "input_mb": 0.253,
       "format": "gpg-aes256",
       "level": "-",
-      "ms": 134.2,
+      "ms": 120.3,
       "ratio_pct": null,
       "success": true
     },
@@ -206,7 +206,7 @@
       "input_mb": 1.25,
       "format": "chain: tar.xz max + gpg + cleanup",
       "level": "max",
-      "ms": 288.7,
+      "ms": 245.7,
       "ratio_pct": null,
       "success": true
     }
@@ -267,13 +267,13 @@
       {
         "case": "non-existent source",
         "graceful": true,
-        "error": "Path does not exist: /tmp/saa-bench-42jsm74n/nope",
+        "error": "Path does not exist: /tmp/saa-bench-j4anvbms/nope",
         "new_files": []
       },
       {
         "case": "overwrite existing output",
         "graceful": true,
-        "error": "Output already exists: /tmp/saa-bench-42jsm74n/exists.tar.xz. Choose another name.",
+        "error": "Output already exists: /tmp/saa-bench-j4anvbms/exists.tar.xz. Choose another name.",
         "new_files": []
       },
       {
