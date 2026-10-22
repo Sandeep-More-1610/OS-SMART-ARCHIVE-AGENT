@@ -289,6 +289,7 @@ Full numbers are in [`benchmarks/results.json`](benchmarks/results.json).
 | Review 1 | Introduction, literature review | [DOCX](docs/Review_1_Smart_Archive_Agent.docx) \| [PDF](docs/Review_1_Smart_Archive_Agent.pdf) |
 | Review 2 | Architecture and design, implementation methodology | [DOCX](docs/Review_2_Smart_Archive_Agent.docx) \| [PDF](docs/Review_2_Smart_Archive_Agent.pdf) |
 | Review 3 | Testing and results, conclusion and future scope, screenshots | [DOCX](docs/Review_3_Smart_Archive_Agent.docx) \| [PDF](docs/Review_3_Smart_Archive_Agent.pdf) |
+| **Reviews 1–3 combined** | Final submission: Review 1 → Review 2 → Review 3 in one file | [PDF](docs/Team12_Smart_Archive_Agent_Reviews_1-3.pdf) |
 
 ---
 
