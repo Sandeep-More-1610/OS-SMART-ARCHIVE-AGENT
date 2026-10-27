@@ -17,11 +17,14 @@ def resolve_output_path(raw_path: str) -> Path:
     if not raw_path or not raw_path.strip():
         raise ValidationError("Please provide an output path.")
     path = Path(os.path.expanduser(raw_path.strip())).resolve()
-    if not path.parent.exists():
-        raise ValidationError(f"Output directory does not exist: {path.parent}")
     from smart_archive_agent.security.guardrails import PROTECTED_DIRS
-    if any(str(path) == d or str(path).startswith(d + "/") for d in PROTECTED_DIRS):
+    protected = [Path(d).resolve() for d in PROTECTED_DIRS]
+    if os.name == "nt":
+        protected += [Path(os.environ.get("SystemRoot", r"C:\Windows")).resolve()]
+    if any(path == d or d in path.parents for d in protected):
         raise ValidationError(f"Refusing to write into a protected system location: {path}")
+    if not path.parent.is_dir():
+        raise ValidationError(f"Output directory does not exist: {path.parent}")
     return path
 
 def reject_same_path(source: Path, output: Path) -> None:

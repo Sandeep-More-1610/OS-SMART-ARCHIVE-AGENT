@@ -1,7 +1,7 @@
 <div align="center">
 
 # Smart Archive Agent
-### Agent #12 of the Agentic Shell — archive, compress and encrypt files in plain English on Linux
+### Agent #12 of the Agentic Shell — archive, compress and encrypt files in plain English on Linux and Windows
 **Operating Systems Project | Agentic Shell**
 
 ---
@@ -12,8 +12,8 @@
 | **Kush Aghera** | `24BCE0149` | redrighthand2007@gmail.com |
 | **Sandeep More** | `24BCE2883` | krishmore2006@gmail.com |
 
-[![Tests](https://img.shields.io/badge/tests-58%20passed-brightgreen.svg)]()
-[![Platform](https://img.shields.io/badge/platform-Ubuntu%20Linux%20%7C%20WSL2-blue.svg)]()
+[![Tests](https://img.shields.io/badge/tests-pytest-brightgreen.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20WSL2-blue.svg)]()
 [![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -21,7 +21,35 @@
 
 ---
 
+## Project provenance
+
+Team 12 project by Kush Aghera and Sandeep More. This fork preserves the original
+repository history and adds Windows compatibility, safer extraction, regression
+tests and a runnable demo. Verified locally on Windows: **89 tests passed**.
+The original Linux benchmarks below are historical results; Linux/WSL was not
+re-tested for this update.
+
 ## What it does
+
+### Windows / VS Code quick start
+
+From this folder in PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[test]"
+.\.venv\Scripts\python.exe -m smart_archive_agent --doctor
+.\.venv\Scripts\python.exe -m smart_archive_agent
+```
+
+Run `.\run.cmd` from this repository folder for the interactive CLI.
+For the demonstration, run `.\.venv\Scripts\python.exe examples/live_demo.py`.
+Windows uses Python's built-in tar/zip/gzip/bzip2/xz support; GNU utilities are
+still used for creating/compressing archives on Linux. GPG is needed only for
+encryption/decryption and is discovered in standard Git/GnuPG installations.
+Quote paths containing spaces and preserve their exact capitalization:
+`archive "./My Project" to "./My Backup.zip"`.
+Extraction refuses existing file collisions, links and special files before writing.
 
 You type a request such as:
 
@@ -87,7 +115,7 @@ source .venv/bin/activate      # in every new terminal; the prompt then starts w
 *Where:* the same terminal, with `(.venv)` showing.
 
 ```bash
-pip install git+https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT.git
+pip install git+https://github.com/Sandeep-More-1610/OS-SMART-ARCHIVE-AGENT.git
 ```
 
 **Step 4: Check the installation.**
@@ -175,14 +203,14 @@ The eight tools are `create_archive`, `extract_archive`, `list_archive`, `inspec
 not in the pip package, so clone it first.
 
 ```bash
-git clone https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT.git ~/OS-SMART-ARCHIVE-AGENT
+git clone https://github.com/Sandeep-More-1610/OS-SMART-ARCHIVE-AGENT.git ~/OS-SMART-ARCHIVE-AGENT
 cd ~/OS-SMART-ARCHIVE-AGENT
 pip install pytest
-python3 -m pytest -q                         # expected: 58 passed
+python3 -m pytest -q                         # expected: 89 passed
 python3 examples/agentic_shell_example.py    # a tiny pretend shell: loads the agent, routes, runs tool calls
 ```
 
-**Updating later:** `pip install --upgrade git+https://github.com/redrighthand2007/OS-SMART-ARCHIVE-AGENT.git`
+**Updating later:** `pip install --upgrade git+https://github.com/Sandeep-More-1610/OS-SMART-ARCHIVE-AGENT.git`
 
 ---
 
@@ -264,7 +292,7 @@ User text ─▶ Guardrail ─▶ Planner ─▶ Plan validation ─▶ Confirma
 ## Tests and measurements
 
 ```bash
-python3 -m pytest -q                 # 58 tests
+python3 -m pytest -q                 # 89 tests
 python3 benchmarks/evaluate.py       # metrics used in the Review 3 report
 ```
 

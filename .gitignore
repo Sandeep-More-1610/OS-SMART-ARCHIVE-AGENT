@@ -54,3 +54,6 @@ Thumbs.db
 scratch/
 test_output/
 tmp/
+
+# Local demonstration output
+demo/

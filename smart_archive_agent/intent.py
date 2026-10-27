@@ -13,7 +13,10 @@ class Intent:
 # Agentic Shell's LLM is available it calls the tools directly instead (see
 # tools/registry.py); this module is the built-in fallback.
 PATH_RE = re.compile(
-    r"""(?P<path>(?:~|/|\./|\.\./)[^\s"'<>]+|[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(?:tar\.xz|tar\.gz|tar\.bz2|tar|tgz|tbz2|zip|gz|bz2|xz|gpg|txt|md|pdf|py|log|csv|json|jpg|png))""",
+    r""""(?P<double>[^"]+)"|'(?P<single>[^']+)'|(?P<path>"""
+    r"""[A-Za-z]:[\\/][^"'<>\r\n]*?(?=\s+(?:to|into|and|with|then)\b|\s+[A-Za-z]:[\\/]|$)|"""
+    r"""(?:~|/|\./|\.\./|\.\\|\.\.\\|\\\\)[^\s"'<>]+|"""
+    r"""[A-Za-z0-9_-][A-Za-z0-9_.-]*\.(?:tar\.xz|tar\.gz|tar\.bz2|tar|tgz|tbz2?|txz|zip|gz|bz2|xz|gpg|txt|md|pdf|py|log|csv|json|jpg|png)\b)""",
     re.IGNORECASE,
 )
 
@@ -55,7 +58,8 @@ ARG_ORDER = {
 def _paths(text: str) -> list[str]:
     found = []
     for match in PATH_RE.finditer(text):
-        value = match.group("path").rstrip(".,!?;:")
+        quoted = match.group("double") or match.group("single")
+        value = quoted if quoted is not None else match.group("path").rstrip(".,!?;: ")
         if value:
             found.append(value)
     # Keep stable order and remove duplicates.

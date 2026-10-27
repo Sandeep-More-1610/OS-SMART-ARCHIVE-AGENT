@@ -45,6 +45,7 @@ FOLDER_RE = re.compile(r"\b(?:my|the|this)\s+([\w.-]+)\s+(?:folder|directory|dir
 EXTENSIONS = {"xz": ".tar.xz", "gz": ".tar.gz", "bz2": ".tar.bz2", "none": ".tar", "zip": ".zip"}
 
 def _explicit_algorithm(low: str) -> str | None:
+    low = low.lower()
     if re.search(r"\bgzip\b|\bgz\b", low):
         return "gz"
     if re.search(r"\bbzip2?\b|\bbz2\b", low):
@@ -67,7 +68,7 @@ def _folder_from_phrase(low: str) -> str | None:
     if not match:
         return None
     name = match.group(1)
-    if name in {"project", "current", "working", "this", "own"}:
+    if name.lower() in {"project", "current", "working", "this", "own"}:
         return "./" + name if Path(name).is_dir() else "."
     for candidate in (Path(name), Path(os.path.expanduser("~")) / name):
         if candidate.is_dir():
@@ -95,12 +96,11 @@ def _strip_suffix(name: str, suffixes: tuple[str, ...]) -> str:
 
 def plan_local(text: str) -> Plan:
     intent = classify(text)
-    low = text.lower()
     if intent.operation in {"exit", "unknown", "unrelated"}:
         return Plan(intent.operation, message=intent.message, operation=intent.operation)
 
     paths = _paths(text)
-    words = PATH_RE.sub(" ", low)   # keywords are matched with the file paths removed
+    words = PATH_RE.sub(" ", text)   # preserve folder name case; regexes ignore case
     op = intent.operation
     level = _level(words)
     algorithm = _explicit_algorithm(words)
@@ -126,7 +126,7 @@ def plan_local(text: str) -> Plan:
         if not paths:
             return Plan("missing", missing=["archive_path"], operation=op,
                         message="Which archive should I look inside?")
-        tool = "inspect_archive" if "inspect" in words else "list_archive"
+        tool = "inspect_archive" if re.search(r"\binspect\w*\b", words, re.I) else "list_archive"
         return Plan("ok", [Step(tool, {"archive_path": paths[0]}, "read the archive without extracting")],
                     operation=tool)
     return _plan_package(text, words, op, paths, level, algorithm)
@@ -150,6 +150,9 @@ def _plan_decrypt(low: str, paths: list[str]) -> Plan:
         steps.append(Step("extract_archive", {"archive_path": out, "destination_path": dest},
                           "unpack the decrypted archive"))
         steps.append(Step("remove_intermediate", {"path": out}, "remove the temporary decrypted archive"))
+    elif wants_extract:
+        return Plan("missing", missing=["archive_path"], operation="decrypt_file",
+                    message="Cannot infer the decrypted archive format. Decrypt to a named archive first, then extract it.")
     return Plan("ok", steps, operation="decrypt_file")
 
 def _plan_package(text: str, words: str, op: str, paths: list[str], level: str, algorithm: str | None) -> Plan:
@@ -173,7 +176,7 @@ def _plan_package(text: str, words: str, op: str, paths: list[str], level: str, 
     packed = None
     if wants_archive:
         fmt = (archive_format_for(named_out) if named_archive else None) or               ("zip" if ZIP_FORMAT_RE.search(words) else algorithm or ("gz" if level == "fast" else "xz"))
-        packed = named_out if named_archive else str(_unique(source_abs.parent / (source_abs.name + EXTENSIONS[fmt])))
+        packed = named_out or str(_unique(source_abs.parent / (source_abs.name + EXTENSIONS[fmt])))
         steps.append(Step("create_archive", {"source_path": source, "output_path": packed,
                                              "compression": fmt, "level": level},
                           f"bundle into one {fmt} archive ({level} compression)"))

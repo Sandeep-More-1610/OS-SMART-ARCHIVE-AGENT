@@ -12,7 +12,9 @@ from smart_archive_agent import handle_request, get_tools, execute_tool
 from smart_archive_agent.planner import Plan, Step, plan_local, validate_plan
 from smart_archive_agent.security.guardrails import check_request
 
-needs_gpg = pytest.mark.skipif(shutil.which("gpg") is None, reason="gpg is not installed")
+from smart_archive_agent.tools.encryption import find_gpg
+
+needs_gpg = pytest.mark.skipif(find_gpg() is None, reason="gpg is not installed")
 
 
 @pytest.fixture

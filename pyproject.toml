@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "smart-archive-agent"
 version = "1.0.0"
-description = "Agent #12 of the Agentic Shell: archive, compress, extract and encrypt files from plain English on Linux."
+description = "Agent #12 of the Agentic Shell: archive, compress, extract and encrypt files from plain English on Linux and Windows."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [
@@ -17,6 +17,7 @@ dependencies = []          # standard library only; needs tar, gzip, bzip2, xz, 
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
     "License :: OSI Approved :: MIT License",
 ]
 

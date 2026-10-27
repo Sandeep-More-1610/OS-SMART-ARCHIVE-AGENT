@@ -49,6 +49,11 @@ def get_manifest() -> dict:
             "python_packages": [],
             "system_commands": ["tar", "gzip", "bzip2", "xz", "gpg", "file"],
             "apt_install": "sudo apt install -y tar gzip bzip2 xz-utils gnupg file",
+            "windows": {
+                "archive_backend": "Python standard library",
+                "system_commands": ["gpg (encryption/decryption only)"],
+                "gpg_discovery": "PATH, GnuPG or Git for Windows installation",
+            },
         },
         "needs_root": False,
         "secrets": "encrypt_file / decrypt_file need a passphrase, passed as execute_tool(..., passphrase=...) "

@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+import os
 from pathlib import Path
 
 # Allow `python smart_archive_agent/main.py` as well as `python -m smart_archive_agent`.
@@ -10,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from smart_archive_agent.agent import run, handle_request, print_result, confirm_in_terminal
 from smart_archive_agent.tools.registry import ask_passphrase
 from smart_archive_agent.manifest import get_manifest, VERSION
+from smart_archive_agent.tools.encryption import find_gpg
 
 # Linux utility -> Ubuntu/Debian package that provides it.
 REQUIRED_UTILITIES = {"tar": "tar", "gzip": "gzip", "bzip2": "bzip2", "xz": "xz-utils",
@@ -19,7 +21,7 @@ USAGE = """Usage:
   python -m smart_archive_agent                  interactive shell
   python -m smart_archive_agent "<request>"      run one request
   python -m smart_archive_agent --yes "<...>"    run without the confirmation prompt
-  python -m smart_archive_agent --doctor         check that required Linux tools are installed
+  python -m smart_archive_agent --doctor         check platform dependencies
   python -m smart_archive_agent --manifest       print the agent description for the Agentic Shell
   python -m smart_archive_agent --version        print the version
 (After `pip install`, `smart-archive-agent` works in place of `python -m smart_archive_agent`.)"""
@@ -28,13 +30,19 @@ def doctor() -> int:
     ok = sys.version_info >= (3, 8)
     print(f"[{'ok' if ok else 'MISSING'}] Python {sys.version.split()[0]} (3.8 or newer required)")
     missing = []
-    for tool, package in REQUIRED_UTILITIES.items():
-        found = shutil.which(tool)
+    utilities = {"gpg": "gnupg"} if os.name == "nt" else REQUIRED_UTILITIES
+    if os.name == "nt":
+        print("[ok] Archive/compression backend: Python standard library (Windows)")
+    for tool, package in utilities.items():
+        found = find_gpg() if tool == "gpg" else shutil.which(tool)
         print(f"[{'ok' if found else 'MISSING'}] {tool:6} {found or ''}")
         if not found:
             missing.append(package)
     if missing:
-        print("\nInstall the missing tools with:\n  sudo apt install " + " ".join(missing))
+        if os.name == "nt":
+            print("\nInstall GnuPG/Gpg4win for encryption. Archive and compression operations work without it.")
+        else:
+            print("\nInstall the missing tools with:\n  sudo apt install " + " ".join(missing))
     else:
         print("\nAll required tools are installed.")
     return 0 if ok and not missing else 1

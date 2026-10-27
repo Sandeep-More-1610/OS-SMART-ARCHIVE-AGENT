@@ -53,13 +53,17 @@ def handle_request(text: str, confirm: Callable[[Plan], bool] | None = None,
 def run_plan(plan: Plan, passphrase=None, plan_lines: list[str] | None = None) -> dict:
     results, produced = [], set()
     for step in plan.steps:
-        if step.tool == "remove_intermediate":
-            result = _remove_intermediate(step.args["path"], produced)
-        else:
-            secret = None
-            if step.tool in NEEDS_PASSPHRASE:
-                secret = passphrase(step.tool) if callable(passphrase) else passphrase
-            result = execute_tool(step.tool, step.args, passphrase=secret)
+        try:
+            if step.tool == "remove_intermediate":
+                result = _remove_intermediate(step.args["path"], produced)
+            else:
+                secret = None
+                if step.tool in NEEDS_PASSPHRASE:
+                    secret = passphrase(step.tool) if callable(passphrase) else passphrase
+                result = execute_tool(step.tool, step.args, passphrase=secret)
+        except Exception as exc:
+            result = {"success": False, "operation": step.tool, "error": str(exc),
+                      "message": "The operation could not be completed."}
         results.append(result)
         if not result.get("success"):
             done = len(results) - 1
@@ -113,7 +117,7 @@ def confirm_in_terminal(plan: Plan) -> bool:
         return False
 
 def run(auto_yes: bool = False):
-    print("Smart Archive Agent (Linux)")
+    print("Smart Archive Agent")
     print("Archive, compress, extract, inspect, encrypt, and decrypt files in plain English.")
     print("Example: zip up my project folder, compress it heavily, and encrypt it")
     print("Type 'exit' to quit.")
